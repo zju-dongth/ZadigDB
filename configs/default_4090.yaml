@@ -1,0 +1,66 @@
+# ZadigDB configuration template (RTX 4090 24.0 GB example)
+
+# Prepared dataset and VLM checkpoint paths
+dataset:
+  topology_file: "./data/cityflow_nl/topology.json"
+  slices_file: "./data/cityflow_nl/slices.jsonl"
+  queries_file: "./data/cityflow_nl/queries.json"
+  vlm_model_path: "./pretrained/Qwen2.5-VL-7B-Instruct"
+
+# Hardware memory budget B_VRAM < B_hard and 4-bit NF4 VLM footprint (Section III-B, Eq. 4)
+hardware:
+  gpu_name: "NVIDIA GeForce RTX 4090"
+  hard_vram_limit_gb: 24.0
+  clause_c1_vram_budget_gb: 22.5
+  base_vlm_weights_gb: 8.174
+  tier0_descriptor_bytes: 2048
+  kv_bytes_per_token: 131072
+
+# Session execution mode ("warm" or "cold")
+execution:
+  mode: "warm"
+
+# Intent-to-Plan Optimizer (IPO) selectivity and quota seeding (Section III-A)
+synthesizer:
+  root_selectivity_threshold: 0.30
+  pushdown_selectivity_threshold: 0.45
+  tier2_verify_share: 0.35
+  hub_regularization_weight: 0.35
+  default_selectivity: 0.28
+
+# Clause-Level Admission Gate parameters (Section III-B to III-D, Theorem 1, Algorithm 1)
+admission_gate:
+  default_k_comp: 4
+  min_coupled_recall: 0.55
+  default_per_hop_p: 0.63
+  rank_tail_alpha: 0.55
+  coupling_consistency_gain: 0.85
+  stagnation_epsilon: 0.015
+  min_compression_alpha: 0.25
+
+# Road-network kinematic causal reachability bounds (Section II-A, Eq. 1)
+topology_defaults:
+  v_min_mps: 5.5
+  v_max_mps: 21.0
+  tau_sig_sec: 18.0
+  congestion_speed_floor_mps: 0.8
+  congestion_clearance_scale: 2.2
+
+# Three-tier visual token buffer pool and Provenance-Heat cache (Section IV, Algorithm 3)
+buffer_pool:
+  tier_resolutions: [1, 32, 256]
+  max_tier1_capacity: 1536
+  max_tier2_capacity: 384
+  ambiguity_margin_gamma: 0.14
+  eviction_policy: "provenance_heat"
+  utility_weights: [0.55, 0.25, 0.20]
+  heat_saturation_cap: 5.0
+
+# Spatio-temporal semantic operator thresholds (Section II-C, Section III-D, Algorithm 2)
+algebra:
+  filter_threshold: 0.52
+  uncertain_margin: 0.14
+  link_appearance_weight: 0.90
+  link_spatiotemporal_weight: 0.10
+  link_min_edge_confidence: 0.36
+  comove_min_pair_confidence: 0.38
